@@ -129,6 +129,14 @@ class BinaryOperator(Node):
         if isinstance(node, BinaryOperator):
             node.right_parents.add(self)
 
+    @staticmethod
+    def inner_join(left_node: Node, right_node: Node):
+        return BinaryOperator(
+            operator_id=0,
+            left={left_node},
+            right={right_node}
+        )
+
 
 class Result(Node):
     def __init__(self, children: Set[Node]):
@@ -143,6 +151,10 @@ class Result(Node):
 
         if isinstance(node, BinaryOperator):
             node.top_parents.add(self)
+
+    @staticmethod
+    def create(child_node: Node):
+        return Result(children={child_node})
 
 
 def generate_search_space(query: Result):
@@ -257,26 +269,29 @@ def attempt_commutativity(node: BinaryOperator, equivalent_nodes):
 
 
 if __name__ == '__main__':
-    query = Result(
-        children={
-            BinaryOperator(
-                operator_id=0,
-                left={
-                    BinaryOperator(
-                        operator_id=0,
-                        left={Relation("a")},
-                        right={
-                            BinaryOperator(
-                                operator_id=0,
-                                left={Relation("c")},
-                                right={Relation("d")}
-                            )
-                        }
-                    )
-                },
-                right={Relation("c")}
+    query = Result.create(
+        BinaryOperator.inner_join(
+            BinaryOperator.inner_join(
+                BinaryOperator.inner_join(
+                    Relation("a"),
+                    Relation("b")
+                ),
+                BinaryOperator.inner_join(
+                    Relation("c"),
+                    Relation("d")
+                )
+            ),
+            BinaryOperator.inner_join(
+                BinaryOperator.inner_join(
+                    Relation("e"),
+                    Relation("f")
+                ),
+                BinaryOperator.inner_join(
+                    Relation("g"),
+                    Relation("h")
+                )
             )
-        }
+        )
     )
 
     generate_search_space(query)
