@@ -26,6 +26,8 @@ industry-oriented team members. DP Bora aims to overcome discrepancy between the
 
 ## Query hypertree
 
+![Simple query hypertree after applying commutativity transformation](./images/ht1.png)
+
 ## Algorithm outline
 
 1. Canonical query tree is constructed directly from the SQL query
