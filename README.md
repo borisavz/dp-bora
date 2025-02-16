@@ -4,10 +4,11 @@
 
 DP Bora is a novel algorithm for optimization of SQL queries.
 It is closely based on DP SUBE, so readers are advised to read the DP SUBE
-paper first. DP Bora dispoves two thesis present in DP SUBE paper:
+paper first. DP Bora dispoves three thesis present in DP SUBE paper:
 
 1. Transformation-based optimizers are not efficient because they consume a lot of memory
 2. Transformation-based optimizers generate exponential number of duplicates
+3. Transformation-based optimizers generate invalid transformations that are discarded later
 
 Current limitations are overcome by innovative data structure called **query hypertree**,
 which describes complete combinatorial search space in a compact and duplicate-free representation
@@ -26,7 +27,23 @@ industry-oriented team members. DP Bora aims to overcome discrepancy between the
 
 ## Query hypertree
 
+Query hypertree presents a generalization of canonical query tree. Every node has associated operator and sets
+of possible left and right inputs. Inputs are always a function over a set of originating relations. Every member
+of input sets is a valid function that has an equivalent output result.
+
+Every path taken in the query hypertree is valid, and problem query optimization is equivalent to
+finding the path with the lowest cost.
+Every node has it's cost function based on output parameters from input costs. To find the lowest cost,
+it is necessary to find lowest cost left and right inputs. For every element of the according input set, 
+cost is calculated, and the lowest cost element is selected.
+
+As DP Bora constructs valid paths only, main premise of dynamic programming that every sub-solution of an optimal
+solution is optimal, caching results using memoization or DP table is possible.
+
+
 ![Simple query hypertree after applying commutativity transformation](./images/ht1.png)
+
+![Simple query hypertree after applying commutativity and one variant of associativity](./images/ht2.png)
 
 ## Algorithm outline
 
@@ -58,6 +75,9 @@ to the `equivalent_nodes` map. Left and right inputs are stored as sets, so addi
 paths is prevented as well. Using reference/memory address equivalence in sets is sufficient,
 as duplicate construction (previous step) is prevented using a robust approach.
 
+DP Bora can be extended to support arbitrary node transformations as long as they can support duplicate prevention
+mechanisms described above.
+
 ## Worklist item processing
 
 For transformations that need to examine only one operator node (i.e. commutativity), only operator applicability
@@ -70,3 +90,25 @@ at either the left or the right operator present in the same searhed pattern.
 This problem is not present in the first pass that analyzes canonical tree, but is necessary in other successive passes,
 as in general case it is not possible to know in which direction should transformation be attempted, so all
 possibilities need to be taken into account.
+
+![Possible positions of target node in searched patterns](./images/target.png)
+
+# Unification and stratification of physical plan generation
+
+Reference implementation works only on logical operators. To implement a production-grade optimizer based on
+DP Bora, logical operators must be transformed to physical operators. Sorting of input always affects both the
+cost and possible applicability of physical operators (i.e. merge join and it's derivatives). It is possible to
+extend DP Bora to add necessary sort operators to alternate query hypertree paths using either **unified** (i.e. generate
+all physical plans in one step) or **stratified** (i.e. generate possible physical plans after all logical plans) approach.
+
+# Restriction of the search space
+
+DP-based algorithms over bushy trees provide absolute optimal query plans, assuming that cost functions (and mainly
+cardinality estimators) are sufficiently precise. However, they take exponentially more steps as the number of
+input relations grows. Many heuristics for transforming canonical trees based on detected query patterns (such as
+star queries) exist.
+
+It is possible to modify DP Bora to restrict search space by restricting applied transformation as the number of
+input relations grows, as the list of transformations is configurable. However, picking needed transformations still
+remains a heuristic, but DP benefits are not completely discarded. Practical applicability of such approach
+needs further analysis.
