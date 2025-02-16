@@ -24,8 +24,6 @@ Author strongly believes that complex (i.e. hard to understand and truly prove) 
 and absence of reference implementations lead to general disregard to computer science from
 industry-oriented team members. DP Bora aims to overcome discrepancy between theory and practice.
 
-## Introduction to SQL query optimization
-
 ## Query hypertree
 
 ## Algorithm outline
@@ -57,3 +55,16 @@ the needed node. If needed node exists, it is picked. Otherwise, a new node is c
 to the `equivalent_nodes` map. Left and right inputs are stored as sets, so adding duplicate
 paths is prevented as well. Using reference/memory address equivalence in sets is sufficient,
 as duplicate construction (previous step) is prevented using a robust approach.
+
+## Worklist item processing
+
+For transformations that need to examine only one operator node (i.e. commutativity), only operator applicability
+and equivalent node existence need to be performed.
+
+For transformations that examine two operator nodes (i.e. associativity, l-asscom and r-asscom), a more sophisticated
+analysis is required. Need for this arises from the fact that when analyzing subtree hierarchy, we can be looking
+at either the left or the right operator present in the same searhed pattern.
+
+This problem is not present in the first pass that analyzes canonical tree, but is necessary in other successive passes,
+as in general case it is not possible to know in which direction should transformation be attempted, so all
+possibilities need to be taken into account.
