@@ -80,10 +80,10 @@ mechanisms described above.
 
 ## Worklist item processing
 
-For transformations that need to examine only one operator node (i.e. commutativity), only operator applicability
+For transformations that need to examine only one operator node (i.e. *commutativity*), only operator applicability
 and equivalent node existence need to be performed.
 
-For transformations that examine two operator nodes (i.e. associativity, l-asscom and r-asscom), a more sophisticated
+For transformations that examine two operator nodes (i.e. *associativity*, *l-asscom* and *r-asscom*), a more sophisticated
 analysis is required. Need for this arises from the fact that when analyzing subtree hierarchy, we can be looking
 at either the left or the right operator present in the same searhed pattern.
 
@@ -93,7 +93,47 @@ possibilities need to be taken into account.
 
 ![Possible positions of target node in searched patterns](./images/target.png)
 
-# Unification and stratification of physical plan generation
+## Applying generalized transformation to hypernodes and hypertrees
+
+DP Bora applies same transformations described in the DP SUBE paper, but in a generalized form that supports
+hypernodes and hypertrees. The essence of transformation generalization is that if one node can have multiple
+equivalent input and output paths, all transformed nodes must be connected properly to all possible paths.
+
+All hypernodes store pointers to parent nodes, besides pointers to child nodes. This means that hypertree is implemented
+using a doubly-linked approach. As left and right inputs are distinct sets (to preserve original query semantics),
+left and right parent pointers are stored separately as well. This enables detecting position of a node in the searched
+pattern when looking from the child perspective (shown on the image in the previous section). Additionally, hypernodes
+store a top pointer for all single input parent nodes (currently, this is only used for pointer to top parent result
+node, but can be used for sort operators if logical and physical plan generation is unified).
+
+Generalized transformations that are apllied only on one hypernode (i.e. *commutativity*) only need to check whether
+the transformation is applicable. If that is the case, a new hypernode is created and linked as an alternative
+input to all parents of the original node.
+
+In generalized commutativity, whole left and right input sets are switched, which is a generalization of switching
+only single left and right input relations/subtrees.
+
+![Generalized commutativity](./images/comm.png)
+
+Generalized transformations that are apllied on two hypernodes (i.e. *associativity*, *l-asscom* and *r-asscom*) are
+more sophisticated and abstract. Transformation applicability is checked for every left/right input/output
+node of the local subtree. If operation is applicable, new nodes are connected to existing input and output **leaf** sets.
+Internal link is not copied as different input paths need separate examination of applicability. On the image,
+hexagon denotes input operator node which is not associative, so it remains on the original position and does not
+get transformed.
+
+![Generalized associativity](./images/assoc.png)
+
+Generalized *l-asscom* and *r-asscom* are implemented using the same approach as generalized associativity.
+The only difference is that leaf inputs are interconnected in different order.
+
+Generalized transformations work in a context-free manner and do not need to examine whole hypertree to determine
+transformation applicability. Transformation applicability is decided by a function that needs only operator, 
+left and right input relations sets and predicate (needed for checking whether the predicate rejects null,
+which is neccessary for applicability in cerain cases from DP SUBE tables). One hypertree transformation can
+create combinatorially large number of possible new paths in time and space efficient manner.
+
+## Unification and stratification of physical plan generation
 
 Reference implementation works only on logical operators. To implement a production-grade optimizer based on
 DP Bora, logical operators must be transformed to physical operators. Sorting of input always affects both the
@@ -101,7 +141,7 @@ cost and possible applicability of physical operators (i.e. merge join and it's 
 extend DP Bora to add necessary sort operators to alternate query hypertree paths using either **unified** (i.e. generate
 all physical plans in one step) or **stratified** (i.e. generate possible physical plans after all logical plans) approach.
 
-# Restriction of the search space
+## Restriction of the search space
 
 DP-based algorithms over bushy trees provide absolute optimal query plans, assuming that cost functions (and mainly
 cardinality estimators) are sufficiently precise. However, they take exponentially more steps as the number of
