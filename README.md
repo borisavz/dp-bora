@@ -4,7 +4,8 @@
 
 DP Bora is a novel algorithm for optimization of SQL queries.
 It is closely based on DP SUBE, so readers are advised to read the DP SUBE
-paper first. DP Bora dispoves three thesis present in DP SUBE paper:
+paper first ([On the correct and complete enumeration of the core search space](https://www.researchgate.net/publication/262216932_On_the_correct_and_complete_enumeration_of_the_core_search_space)).
+DP Bora dispoves three thesis present in DP SUBE paper:
 
 1. Transformation-based optimizers are not efficient because they consume a lot of memory
 2. Transformation-based optimizers generate exponential number of duplicates
