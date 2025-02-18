@@ -1,4 +1,4 @@
-# DP Bora - transformation-based optimizers strike again!
+# DP Bora - transformation-based optimizers strike back!
 
 ## Introduction
 
@@ -106,7 +106,7 @@ pattern when looking from the child perspective (shown on the image in the previ
 store a top pointer for all single input parent nodes (currently, this is only used for pointer to top parent result
 node, but can be used for sort operators if logical and physical plan generation is unified).
 
-Generalized transformations that are apllied only on one hypernode (i.e. *commutativity*) only need to check whether
+Generalized transformations that are applied only on one hypernode (i.e. *commutativity*) only need to check whether
 the transformation is applicable. If that is the case, a new hypernode is created and linked as an alternative
 input to all parents of the original node.
 
@@ -115,7 +115,7 @@ only single left and right input relations/subtrees.
 
 ![Generalized commutativity](./images/comm.png)
 
-Generalized transformations that are apllied on two hypernodes (i.e. *associativity*, *l-asscom* and *r-asscom*) are
+Generalized transformations that are applied on two hypernodes (i.e. *associativity*, *l-asscom* and *r-asscom*) are
 more sophisticated and abstract. Transformation applicability is checked for every left/right input/output
 node of the local subtree. If operation is applicable, new nodes are connected to existing input and output **leaf** sets.
 Internal link is not copied as different input paths need separate examination of applicability. On the image,
